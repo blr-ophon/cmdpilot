@@ -4,7 +4,6 @@
 
 void displayRegisterList(void);
 void displayHelp(void);
-void parseCommand(void);
 
 
 #endif

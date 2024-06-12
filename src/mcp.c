@@ -1,12 +1,13 @@
 #include "mcp.h"
 
-/*
- * Format:
- * cmdpilot -c <command> <arguments> <flags>
- */
 
-int main(void){
+int main(int argc, char *argv[]){
+    //Parse arguments
+    //Execute
     return 0;
+}
+
+void MCP_exec(void){
 }
 
 

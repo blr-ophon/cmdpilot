@@ -7,15 +7,27 @@
 
 #include "mcp.h"
 
-int MCPTL_socket(void);
+typedef enum{
+    STATE_IDLE,
+    STATE_CONFIGURING,
+    STATE_CONNECTING,
+    STATE_CONNECTED,
+}MCPTL_state;
 
-int MCPTL_connect(void);
+typedef struct{
+    uint8_t txBuf[64];
+    uint8_t rxBuf[64];
+    uint8_t state;
+}MCPTL_handle;
 
-int MCPTL_listen(void);
 
-int MCPTL_send(uint8_t *buf);
+MCPTL_handle *MCPTL_getHandle(void);
 
-int MCPTL_recv(void);
+int MCPTL_connect(MCPTL_handle *pHandle);
+
+int MCPTL_send(MCPTL_handle *pHandle, uint8_t *buf, int *n);
+
+int MCPTL_recv(MCPTL_handle *pHandle, uint8_t *buf, int *n);
 
 
 

@@ -1,5 +1,10 @@
 #include "services.h"
 
+//Local functions
+static int Services_CommandParse(char *arguments, Command_t *command);
+static int Services_RegistryParse(char *arguments);
+static int Services_DatalogParse(char *arguments);
+
 /*
  * Format:
  * cmdpilot -c <command> <arguments> <flags>
@@ -11,7 +16,7 @@
  * Arguments: Arguments for the service
  * Ex.: cmdpilot -c startmotor. C is the service(command) and startmotor the argument
  */
-int Services_exec(char *service, char *arguments){
+int Services_Handler(char *service, char *arguments){
     int rv = 0;
     char serv = service[0];
 
@@ -30,9 +35,13 @@ int Services_exec(char *service, char *arguments){
             //MCPTL_recv(buf)
             break;
             }
-        case 'D':   //Datalog (TODO)
+
+        case 'R':   //Registry
             break;
-        case 'R':   //Registry (TODO)
+        case 'D':   //Datalog
+            /*
+             * Not Implemented
+             */
             break;
         default:
             rv |= -EINVARG;
@@ -45,17 +54,18 @@ int Services_exec(char *service, char *arguments){
 
 /* Parse Functions */
 
-int Services_CommandParse(char *arguments, Command_t *command){
+static int Services_CommandParse(char *arguments, Command_t *command){
     //Parse all arguments to command struct
+
     return 0;
 }
 
-int Services_RegistryParse(char *arguments){
+static int Services_RegistryParse(char *arguments){
     //Parse all arguments to a struct
     return 0;
 }
 
-int Services_DatalogParse(char *arguments){
+static int Services_DatalogParse(char *arguments){
     //Parse all arguments to a struct
     return 0;
 }

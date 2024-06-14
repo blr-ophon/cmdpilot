@@ -12,13 +12,6 @@
 #include "mcp.h"
 #include "mcptl.h"
 
-
-
-int Services_exec(char *service, char *arguments);
-
-//TODO: static
-int Services_CommandParse(char *arguments, Command_t *command);
-int Services_RegistryParse(char *arguments);
-int Services_DatalogParse(char *arguments);
+int Services_Handler(char *service, char *arguments);
 
 #endif

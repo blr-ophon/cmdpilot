@@ -1,0 +1,32 @@
+================================================================================
+USAGE
+================================================================================
+
+Usage:
+    cmdpilot [-X] [-args[arguments]] [-port[serial port]]
+
+Services[-X]:
+    -C: Send Command
+        Arguments: getmcpversion, startmotor, stopmotor, stopramp, startstop, faultack
+    -R: Set/Get Register(s)
+        Arguments: set (id=value, id=value,...)  
+                   get (id=value, id=value,...)
+        Example: cmdpilot -R set (1=0x1234,2=4321)
+    -D: Datalog (Not implemented)
+    -h: Help window
+    -r: register list
+
+
+================================================================================
+FILES
+================================================================================
+
+mcp:        Main. Interprets all arguments. Sets ports, shows lists, interpret
+            commands etc.
+services:   Transforms the string arguments into commands to be sent
+ui:         Outputs data 
+mcptl:      Functions for connecting, sending and receiving bytes. Similar to 
+            UNIX network programming API 
+packet:     Constains header/packet definitions, functions to set them and CRC checks
+serialize:  Decoding and Encoding of Packets
+uart:       Low level functions to read and receives bytes through serial port

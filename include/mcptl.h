@@ -6,6 +6,8 @@
  */
 
 #include "mcp.h"
+#include "packet.h"
+#include "serialize.h"
 
 typedef enum{
     STATE_IDLE,

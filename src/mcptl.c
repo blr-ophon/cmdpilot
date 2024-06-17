@@ -27,11 +27,23 @@ int MCPTL_connect(MCPTL_handle *pHandle){
     while(pHandle->state != STATE_CONNECTED){
         switch(pHandle->state){
             case STATE_IDLE:
+                {
+                //Create packet 
+                BEACON_t Beacon;
+                Packet_setBeacon(0,0,0,0,0,0,0,0);
+                Packet_t Packet;
+                Packet.header.Beacon = Beacon;
+                Packet.Payload = 0;
+                Packet.CRC = 0;
+                //Serialize packet
                 //Send beacon
+                //
                 //read response
+                
                 //if response is the same, state = connecting
-                //else, change beacon and resend,state = configuring
+                //else, change beacon, state = configuring
                 break;
+                }
             case STATE_CONFIGURING:
                 //Send beacon
                 //read response, check crc

@@ -38,6 +38,9 @@ int UART_Send(int fd, uint8_t *tx_buf, int n){
 int UART_Recv(int fd, uint8_t *rx_buf, int buf_size){
     int rv = 0;
     rv = read(fd, rx_buf, buf_size);
+    if(rv < 0){
+        //Error. Else, read return the number of bytes
+    }
     return rv;
 }
 

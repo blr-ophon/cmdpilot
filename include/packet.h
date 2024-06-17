@@ -86,9 +86,7 @@ typedef struct{
 /// Functions
 ////////////////////////////////////////////////////////////////////////////////
 
-int Packet_CRCCheck(Packet_t *packet);
-int Packet_CRCHCheck(PacketHeader_t *header);
-int Packet_setBeacon(PacketHeader_t *header, uint8_t type, uint8_t version, 
+void Packet_setBeacon(Packet_t *packet, uint8_t type, uint8_t version, 
         uint8_t CRC, uint8_t CRCH, uint8_t RXS_Max, uint8_t TXA_Max, uint8_t TXS_Max);
 
 

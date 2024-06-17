@@ -5,6 +5,7 @@
  * Transport Layer
  */
 
+#include <stdbool.h>
 #include "mcp.h"
 #include "packet.h"
 #include "serialize.h"
@@ -22,6 +23,9 @@ typedef struct{
     uint8_t rxBuf[256];
     uint8_t state;
     int fd;
+    int TXA_Max;    //Controller TXA max. Asynchronous channel
+    int TXS_Max;    //Controller TXS max. Synchronous channel
+    int RXS_Max;    //Controller RXS max
 }MCPTL_handle;
 
 
@@ -29,10 +33,7 @@ MCPTL_handle *MCPTL_getHandle(void);
 
 int MCPTL_connect(MCPTL_handle *pHandle);
 
-int MCPTL_send(MCPTL_handle *pHandle, uint8_t *buf, int *n);
-
-int MCPTL_recv(MCPTL_handle *pHandle, uint8_t *buf, int *n);
-
-
+int MCPTL_sendSYNC(MCPTL_handle *pHandle, int *n);
+int MCPTL_sendASYNC(MCPTL_handle *pHandle, int *n);
 
 #endif

@@ -7,7 +7,6 @@
 
 #include <stdint.h>
 #include <stdint.h>
-
 #define BADCRC  1
 
 typedef enum{

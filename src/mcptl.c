@@ -28,6 +28,7 @@ int MCPTL_connect(MCPTL_handle *pHandle){
         switch(pHandle->state){
             case STATE_IDLE:
                 {
+                uint8_t buf[256];
                 //Create packet 
                 BEACON_t Beacon;
                 Packet_setBeacon(0,0,0,0,0,0,0,0);
@@ -35,13 +36,25 @@ int MCPTL_connect(MCPTL_handle *pHandle){
                 Packet.header.Beacon = Beacon;
                 Packet.Payload = 0;
                 Packet.CRC = 0;
-                //Serialize packet
-                //Send beacon
-                //
+                //Serialize packet and send
+                Serialize_Packet(&Packet, buf, 256);
+                //TODO: Use MPTL_sendData for automatic buffer/channel handling
+                UART_Send(pHandle->fd, pHandle->txBuf, 256);
+
                 //read response
+                //TODO:wait?
+                UART_Recv(pHandle->fd, pHandle->rxBuf, 256);
                 
                 //if response is the same, state = connecting
                 //else, change beacon, state = configuring
+                //TODO: check if they have same size first, then use their size
+                int a = memcmp(pHandle->rxBuf, pHandle->txBuf, 256);
+                if(a == 0){
+                    pHandle->state = STATE_CONNECTING;
+                }else{
+                    //TODO: change beacon;
+                    pHandle->state = STATE_CONFIGURING;
+                }
                 break;
                 }
             case STATE_CONFIGURING:
@@ -58,7 +71,7 @@ int MCPTL_connect(MCPTL_handle *pHandle){
                 break;
             default:
                 break;
-                //TODO: Bad packet
+                //TODO: Bad packet / Handle
         }
     }
     return 0;

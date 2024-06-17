@@ -8,6 +8,7 @@
 #include "mcp.h"
 #include "packet.h"
 #include "serialize.h"
+#include "uart.h"
 
 typedef enum{
     STATE_IDLE,
@@ -17,9 +18,10 @@ typedef enum{
 }MCPTL_state;
 
 typedef struct{
-    uint8_t txBuf[64];
-    uint8_t rxBuf[64];
+    uint8_t txBuf[256];
+    uint8_t rxBuf[256];
     uint8_t state;
+    int fd;
 }MCPTL_handle;
 
 

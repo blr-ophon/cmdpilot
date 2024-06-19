@@ -28,12 +28,19 @@ typedef struct{
     int RXS_Max;    //Controller RXS max
 }MCPTL_handle;
 
+typedef enum{
+    RETURN_ERROR    =   1 << 0,     //sendSYNC will return on error instead of resending packet
+                                    //Used mainly in connection phase
+    NO_TIMEOUT      =   1 << 1,     //sendSYNC will never stop trying to connect 
+}sendSYNC_flags;
+
 
 MCPTL_handle *MCPTL_getHandle(void);
-
 int MCPTL_connect(MCPTL_handle *pHandle);
+int MCPTL_sendCommand(MCPTL_handle *pHandle, uint8_t command, uint8_t *payload, int pl_n);
 
-int MCPTL_sendSYNC(MCPTL_handle *pHandle, int *n);
-int MCPTL_sendASYNC(MCPTL_handle *pHandle, int *n);
+int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon);
+int MCPTL_stateCONFIG(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon);
+int MCPTL_stateCONNECT(MCPTL_handle *pHandle);
 
 #endif

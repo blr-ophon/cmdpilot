@@ -34,8 +34,10 @@ typedef struct{
 
 typedef struct{
     uint8_t type:4;
-    uint8_t C:2;
-    uint8_t N:2;
+    uint8_t C1:1;
+    uint8_t C2:1;
+    uint8_t N1:1;
+    uint8_t N2:1;
     uint8_t LLID:4;
     uint16_t Number;
     uint8_t CRCH:4;
@@ -45,7 +47,7 @@ typedef struct{
     uint8_t type:4;
     uint8_t reserved1:4;
     uint8_t ErrorCode1;
-    uint8_t ErrorCode2;
+    uint8_t ErrorCode2; //Copy of errorcode1
     uint8_t reserved2:4;
     uint8_t CRCH:4;
 }__attribute__((packed)) ERROR_t;
@@ -86,8 +88,12 @@ typedef struct{
 /// Functions
 ////////////////////////////////////////////////////////////////////////////////
 
-void Packet_setBeacon(Packet_t *packet, uint8_t type, uint8_t version, 
-        uint8_t CRC, uint8_t CRCH, uint8_t RXS_Max, uint8_t TXA_Max, uint8_t TXS_Max);
+void Beacon_decode(BEACON_t *beacon, uint8_t *buf);
+void Beacon_set(BEACON_t *beacon, uint8_t version, uint8_t CRC, uint8_t CRCH, 
+        uint8_t RXS_Max, uint8_t TXA_Max, uint8_t TXS_Max);
+void Ping_set(PING_t *ping, uint8_t C, uint8_t N, uint8_t LLID, uint16_t Number, uint8_t CRCH);
 
+int Packet_checkError(uint8_t *PKTbuf);
+uint8_t Packet_getType(uint8_t *PKTbuf);
 
 #endif

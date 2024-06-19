@@ -6,9 +6,7 @@
  */
 
 #include <stdbool.h>
-#include "mcp.h"
 #include "packet.h"
-#include "serialize.h"
 #include "uart.h"
 
 typedef enum{
@@ -35,12 +33,9 @@ typedef enum{
 }sendSYNC_flags;
 
 
-MCPTL_handle *MCPTL_getHandle(void);
-int MCPTL_connect(MCPTL_handle *pHandle);
-int MCPTL_sendCommand(MCPTL_handle *pHandle, uint8_t command, uint8_t *payload, int pl_n);
 
 int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon);
-int MCPTL_stateCONFIG(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon);
+int MCPTL_stateCONFIG(MCPTL_handle *pHandle, BEACON_t *LocalBeacon);
 int MCPTL_stateCONNECT(MCPTL_handle *pHandle);
 
 #endif

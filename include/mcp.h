@@ -5,14 +5,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include "error.h"
+#include "mcptl.h"
+#include "config.h"
 
 typedef struct{
     uint8_t *reg_ids;
     uint8_t *reg_values;
     uint8_t size;
 }Register_Payload;
-
-
 
 /*
  * COMMAND
@@ -62,5 +62,11 @@ typedef enum{
   RP_USER_CMD_NOT_IMPL     =   0x0d,
 }Response_Code;
 
+
+
+
+MCPTL_handle *MCP_getHandle(void);
+int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id, uint8_t *payload, int pl_len);
+int MCP_connect(MCPTL_handle *pHandle);
 
 #endif

@@ -1,4 +1,5 @@
 #include "mcptl.h"
+#include "serialize.h"
 
 //TODO: Every packet has a response, except asynchronous ones.
 //If CRC check failed, the sent one must be resent
@@ -8,19 +9,15 @@
 
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
 
+/* Local Functions */
 static bool MCPTL_CRCCheck(uint8_t *packet, int size);
 static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t *buf, int n);
 static int MCPTL_recvPacket(MCPTL_handle *pHandle, uint8_t *buf, int *n);
 static int MCPTL_sendSYNC(MCPTL_handle *pHandle, uint8_t flags);
+static int MCPTL_sendASYNC(MCPTL_handle *pHandle, uint8_t flags);
+static int MCPTL_CONFIG_UpdateBeacon(BEACON_t *LocalBeacon, BEACON_t *PerformerBeacon);
 
 
-
-/*
- * Creates an MCPTL socket that contains two independent channels
- */
-MCPTL_handle *MCPTL_getHandle(void){
-    return 0;
-}
 
 /*
  * Sends Beacon and awaits for response. If response is equal, go to
@@ -67,7 +64,7 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
 /*
  * Exchanges Beacon with performer until both agree on parameters
  */
-int MCPTL_stateCONFIG(MCPTL_handle *pHandle, const BEACON_t * const LocalBeacon){
+int MCPTL_stateCONFIG(MCPTL_handle *pHandle, BEACON_t * LocalBeacon){
     int rv = 0;     //timeout, error
 
     //Create packet 
@@ -96,7 +93,7 @@ int MCPTL_stateCONFIG(MCPTL_handle *pHandle, const BEACON_t * const LocalBeacon)
                     repeat = false;
                 }else{
                     Beacon_decode(&PerformerBeacon, pHandle->rxBuf);
-                    packet.header.Beacon = PerformerBeacon;
+                    MCPTL_CONFIG_UpdateBeacon(LocalBeacon, &PerformerBeacon);
                 }
                 break;
             case PKTTYPE_ERROR:
@@ -162,7 +159,6 @@ int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
  * Send whatever is on Synchronous channel, checks
  * CRC of response
  * Supposes packet is already serialized in pHandle buffer.
- * Maybe its better if packet is sent as argument (TODO)
  */
 static int MCPTL_sendSYNC(MCPTL_handle *pHandle, uint8_t flags){
     //TODO: number of bytes to send and received inside handle
@@ -199,7 +195,7 @@ out:
  * CRC check
  * TODO: SYNC/ASYNC as flag instead of another function
  */
-int MCPTL_sendASYNC(MCPTL_handle *pHandle, int *n){
+static int MCPTL_sendASYNC(MCPTL_handle *pHandle, uint8_t flags){
     return 0;
 }
 
@@ -249,4 +245,10 @@ static bool MCPTL_CRCCheck(uint8_t *packet, int size){
     }
 #endif
     return true;
+}
+
+static int MCPTL_CONFIG_UpdateBeacon(BEACON_t *LocalBeacon, BEACON_t *PerformerBeacon){
+    LocalBeacon->RXS_Max = MIN(LocalBeacon->RXS_Max, PerformerBeacon->RXS_Max);
+    LocalBeacon->TXS_Max = MIN(LocalBeacon->TXS_Max, PerformerBeacon->TXS_Max);
+    LocalBeacon->TXA_Max = MIN(LocalBeacon->TXA_Max, PerformerBeacon->TXA_Max);
 }

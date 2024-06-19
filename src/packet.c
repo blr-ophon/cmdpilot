@@ -5,8 +5,8 @@ void Beacon_decode(BEACON_t *beacon, uint8_t *buf){
     memcpy(beacon, buf, sizeof(BEACON_t));
 }
 
-void Beacon_set(BEACON_t *beacon, uint8_t version, uint8_t CRC, uint8_t CRCH, 
-        uint8_t RXS_Max, uint8_t TXA_Max, uint8_t TXS_Max){
+void Beacon_set(BEACON_t *beacon, uint8_t version, uint8_t CRC, uint8_t RXS_Max, 
+        uint8_t TXS_Max, uint8_t TXA_Max, uint8_t CRCH){
 
     beacon->type = PKTTYPE_BEACON;
     beacon->version = version;

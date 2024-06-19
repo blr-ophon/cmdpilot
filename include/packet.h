@@ -89,8 +89,8 @@ typedef struct{
 ////////////////////////////////////////////////////////////////////////////////
 
 void Beacon_decode(BEACON_t *beacon, uint8_t *buf);
-void Beacon_set(BEACON_t *beacon, uint8_t version, uint8_t CRC, uint8_t CRCH, 
-        uint8_t RXS_Max, uint8_t TXA_Max, uint8_t TXS_Max);
+void Beacon_set(BEACON_t *beacon, uint8_t version, uint8_t CRC, uint8_t RXS_Max, 
+        uint8_t TXS_Max, uint8_t TXA_Max, uint8_t CRCH);
 void Ping_set(PING_t *ping, uint8_t C, uint8_t N, uint8_t LLID, uint16_t Number, uint8_t CRCH);
 
 int Packet_checkError(uint8_t *PKTbuf);

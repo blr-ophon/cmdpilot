@@ -6,10 +6,19 @@
  * Creates an MCPTL socket with two independent channels
  * and user defined parameters
  */
-MCPTL_handle *MCP_getHandle(void){
-    //Configure UART, get file descriptor
-    //Get parameters from a config.h file
-    return 0;
+MCPTL_handle *MCP_createHandle(char *port, long baudRate){
+    MCPTL_handle *pHandle = malloc(sizeof(MCPTL_handle));
+    pHandle->fd = UART_getfd(port, baudRate);
+    pHandle->state = STATE_IDLE;
+    pHandle->RXS_Max = RXS_MAX;
+    pHandle->TXS_Max = TXS_MAX;
+    pHandle->TXA_Max = TXA_MAX;
+
+    return pHandle;
+}
+
+void MCP_freeHandle(MCPTL_handle *pHandle){
+    free(pHandle);
 }
 
 
@@ -41,8 +50,9 @@ int MCP_connect(MCPTL_handle *pHandle){
                 MCPTL_stateCONNECT(pHandle);
                 break;
             default:
-                break;
-                //TODO: Bad packet / Handle
+                perror("Bad handle");
+                rv = -1;
+                goto out;
         }
     }
 
@@ -58,7 +68,6 @@ int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id,
     if(pHandle->state != STATE_CONNECTED){
         rv = -1;
         goto out;
-        //TODO: error handling
     }
     Command_t command;
     command.motor_id = motor_id;
@@ -78,22 +87,20 @@ out:
 /*
  * Read reponse from serial port
  */
-int MCP_recvResponse(MCPTL_handle *pHandle){
+void MCP_recvResponse(MCPTL_handle *pHandle, Response_t *response){
     //Receive Response
     int recv_bytes = UART_Recv(pHandle->fd, pHandle->SYNCrxBuf, 256);
-    uint8_t status_code = pHandle->SYNCrxBuf[recv_bytes-1];
-    if(status_code == RP_CMD_OK){
-        
+    response->status_code = pHandle->SYNCrxBuf[recv_bytes-1];
+    if(response->status_code == RP_CMD_OK){
+        //read payload    
+        memcpy(response->payload, pHandle->SYNCrxBuf, recv_bytes-1);
     }
-    int rv = 0;
-
-    return rv;
 }
 
 /* TODO */
 int MCP_Datalog(MCPTL_handle *pHandle, uint8_t *payload, int pl_len){
     //Create command packet with specified command id
-    //sendSYNC
+    //sendASYNC
     //decode response and return it
     return 0;
 }

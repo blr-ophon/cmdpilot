@@ -1,9 +1,9 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-//Interface errors
-#define EINVARG      1
-#define EINVCOMMAND  2
-#define EUSARTFAIL   3
+#define EINVARG      (1  << 0)
+#define EINVCOMMAND  (1  << 1)
+#define EUSARTFAIL   (1  << 2)
+#define EBADHANDLE   (1  << 3)
 
 #endif

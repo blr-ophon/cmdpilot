@@ -161,7 +161,6 @@ int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
  * Supposes packet is already serialized in pHandle buffer.
  */
 static int MCPTL_sendCTRL(MCPTL_handle *pHandle){
-    //TODO: Clear response buffer
     //TODO: number of bytes to send and received inside handle
     int rv = 0;
     if(pHandle->state != STATE_CONNECTED){ 

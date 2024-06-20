@@ -8,4 +8,6 @@
 #define TXS_MAX     0   //TODO
 #define TXA_MAX     0   //TODO
 
+#define BAUD_RATE   0
+
 #endif

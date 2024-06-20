@@ -69,9 +69,11 @@ typedef enum{
 
 
 
-MCPTL_handle *MCP_getHandle(void);
+MCPTL_handle *MCP_createHandle(char *port, long baud_rate);
+void MCP_freeHandle(MCPTL_handle *pHandle);
+
 int MCP_connect(MCPTL_handle *pHandle);
 int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id, uint8_t *payload, int pl_len);
-int MCP_recvResponse(MCPTL_handle *pHandle);
+void MCP_recvResponse(MCPTL_handle *pHandle, Response_t *response);
 
 #endif

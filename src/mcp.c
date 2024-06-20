@@ -15,7 +15,7 @@ MCPTL_handle *MCP_getHandle(void){
 
 
 int MCP_connect(MCPTL_handle *pHandle){
-    //TODO: if any of the received packets is ERROR,
+    int rv = 0;
     //restart connection from the beginning
     BEACON_t LocalBeacon;
     Beacon_set(&LocalBeacon, MCPVERSION, 0, RXS_MAX, TXS_MAX, TXS_MAX, 0);
@@ -45,10 +45,14 @@ int MCP_connect(MCPTL_handle *pHandle){
                 //TODO: Bad packet / Handle
         }
     }
-    return 0;
+
+out:
+    return rv;
 }
 
-/* TODO */
+/* 
+ * Send command via UART after connection has been stablished
+ */
 int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id, uint8_t *payload, int pl_len){
     int rv = 0;
     if(pHandle->state != STATE_CONNECTED){
@@ -64,26 +68,24 @@ int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id,
 
     uint8_t buf[256];
     Serialize_Command(&command, buf, 256);
-    UART_Send(pHandle->fd, pHandle->txBuf, 256);
+    UART_Send(pHandle->fd, pHandle->SYNCtxBuf, 256);
 
-    //Delay?
-
-    //Receive Response
-    int recv_bytes = UART_Recv(pHandle->fd, pHandle->rxBuf, 256);
-    uint8_t status_code = pHandle->rxBuf[recv_bytes-1];
-    if(status_code == RP_CMD_OK){
-
-    }
-
-    //TODO decode response and return it
 out:
     return rv;
 }
 
-int MCP_recvResponse(MCPTL_handle *pHandle){
-    int rv = 0;
-    //TODO: read from command channel
 
+/*
+ * Read reponse from serial port
+ */
+int MCP_recvResponse(MCPTL_handle *pHandle){
+    //Receive Response
+    int recv_bytes = UART_Recv(pHandle->fd, pHandle->SYNCrxBuf, 256);
+    uint8_t status_code = pHandle->SYNCrxBuf[recv_bytes-1];
+    if(status_code == RP_CMD_OK){
+        
+    }
+    int rv = 0;
 
     return rv;
 }

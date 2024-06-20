@@ -10,6 +10,12 @@
 #include "uart.h"
 
 typedef enum{
+    CHANNEL_CTRL,
+    CHANNEL_SYNC,
+    CHANNEL_ASYNC,
+}MCPTL_Channel;
+
+typedef enum{
     STATE_IDLE,
     STATE_CONFIGURING,
     STATE_CONNECTING,
@@ -17,8 +23,14 @@ typedef enum{
 }MCPTL_state;
 
 typedef struct{
-    uint8_t txBuf[256];
-    uint8_t rxBuf[256];
+    //Synchronous Channel
+    uint8_t SYNCrxBuf[256];     
+    uint8_t SYNCtxBuf[256];
+    //Control Channel
+    uint8_t CTRLrxbuf[256];
+    uint8_t CTRLtxbuf[256];
+
+
     uint8_t state;
     int fd;
     int TXA_Max;    //Controller TXA max. Asynchronous channel

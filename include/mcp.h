@@ -1,6 +1,10 @@
 #ifndef MCP_H
 #define MCP_H
 
+/*
+ * TODO: sendSYNC ERROR_BREAK flag seems useless
+ */
+
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -66,7 +70,8 @@ typedef enum{
 
 
 MCPTL_handle *MCP_getHandle(void);
-int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id, uint8_t *payload, int pl_len);
 int MCP_connect(MCPTL_handle *pHandle);
+int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id, uint8_t *payload, int pl_len);
+int MCP_recvResponse(MCPTL_handle *pHandle);
 
 #endif

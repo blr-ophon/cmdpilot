@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "error.h"
 #include "mcptl.h"
 #include "config.h"

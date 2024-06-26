@@ -1,5 +1,6 @@
 #include <string.h>
 #include "serialize.h"
+#include <stdio.h>
 
 #define MIN(a,b) ( ((a) < (b)) ? (a) : (b) )
 
@@ -40,4 +41,5 @@ int Serialize_Command(Command_t *command, uint8_t *buf, int buf_size){
 out:
     return rv;
 }
+
 

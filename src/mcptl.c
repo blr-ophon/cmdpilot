@@ -1,5 +1,6 @@
 #include "mcptl.h"
 #include "serialize.h"
+#include "decode.h"
 
 //If CRC check failed, the sent one must be resent
 //There is no send and receive on the API, only send-receive pair,
@@ -28,13 +29,13 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
     //Create packet 
     Packet_t packet;
     packet.header.Beacon = *LocalBeacon;
-    packet.Payload = 0;
-    packet.CRC = 0;
+    packet.Payload = NULL;
+    packet.Payload_size = 0;
 
     //Serialize packet and move to sync channel
-    uint8_t buf[256];
-    Serialize_Packet(&packet, buf, 256);
-    memcpy(pHandle->CTRLrxbuf, buf, 256);
+    uint8_t buf[BEACON_SIZE];
+    Serialize_Packet(&packet, buf, BEACON_SIZE);
+    memcpy(pHandle->CTRLrxbuf, buf, BEACON_SIZE);
 
     //Send packet and check for error response
     bool repeat = false;
@@ -215,6 +216,7 @@ static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
             break;
         case CHANNEL_ASYNC:
             //TODO
+            goto out;
             break;
         default:
             perror("Invalid channel");
@@ -237,6 +239,7 @@ static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
     //send CRC
     UART_Send(pHandle->fd, offset, 2);
 
+    Decode_Packet(txBuf, 0);
 out:
     return rv;
 }
@@ -255,6 +258,7 @@ static int MCPTL_recvPacket(MCPTL_handle *pHandle, uint8_t channel, int *n){
             break;
         case CHANNEL_ASYNC:
             //TODO
+            goto out;
             break;
         default:
             perror("Invalid channel");
@@ -269,6 +273,8 @@ static int MCPTL_recvPacket(MCPTL_handle *pHandle, uint8_t channel, int *n){
     }else{
         *n = rv;
     }
+
+    Decode_Packet(rxBuf, 1);
 
 out:
     return rv;

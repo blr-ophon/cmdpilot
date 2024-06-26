@@ -1,13 +1,17 @@
 #include "uart.h"
 
-
+/*
+ * Given the name of a serial port and a Baud Rate
+ * returns a file descriptor
+ */
 int UART_getfd(char *port, int baud_rate){
     int fd;
     struct termios options;
 
     fd = open(port, O_RDWR | O_NDELAY | O_NOCTTY);
     if(fd < 0){
-        perror("Error opening serial port");
+        printf("Error opening serial port\n");
+        perror("open");
         goto out;
     }
 
@@ -29,17 +33,26 @@ out:
 }
 
 
+/*
+ * Writes n bytes from tx_buf on fd
+ */
 int UART_Send(int fd, uint8_t *tx_buf, int n){
     int rv = 0;
     rv = write(fd, tx_buf, n);
+    if(rv < 0){
+        perror("write");
+    }
     return rv;
 }
 
+/*
+ * Reads from fd to rx_buf
+ */
 int UART_Recv(int fd, uint8_t *rx_buf, int buf_size){
     int rv = 0;
     rv = read(fd, rx_buf, buf_size);
     if(rv < 0){
-        //Error. Else, read return the number of bytes
+        perror("read");
     }
     return rv;
 }

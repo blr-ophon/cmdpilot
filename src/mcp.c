@@ -2,7 +2,6 @@
 #include "serialize.h"
 
 /*
- * TODO
  * Creates an MCPTL socket with two independent channels
  * and user defined parameters
  */
@@ -21,6 +20,35 @@ void MCP_freeHandle(MCPTL_handle *pHandle){
     free(pHandle);
 }
 
+
+/*
+ * TODO
+ */
+int MCP_keepAlive(MCPTL_handle *pHandle, bool condition){
+    int rv = 0;
+
+    bool alive = false;
+    if(condition){
+        //send PING
+        //receive and check response
+        alive = true;
+    }
+
+    int timeout = 5;    //seconds
+    time_t startTime = time(NULL);
+    time_t curTime;
+    while(!alive){
+        rv = MCP_connect(pHandle);
+        curTime = time(NULL);
+        if(curTime-startTime >= timeout){
+            perror("Keep Alive Timeout");
+            rv = -EKEEPALIVE_TIMEOUT;
+            break;
+        }
+    }
+    
+    return rv; 
+}
 
 
 int MCP_connect(MCPTL_handle *pHandle){

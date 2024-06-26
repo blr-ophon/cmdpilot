@@ -4,10 +4,17 @@
 //TODO: define
 
 #define MCPVERSION  0   
-#define RXS_MAX     0   //TODO
-#define TXS_MAX     0   //TODO
-#define TXA_MAX     0   //TODO
+#define RXS_MAX     64   //TODO
+#define TXS_MAX     64   //TODO
+#define TXA_MAX     64   //TODO
 
 #define BAUD_RATE   0
+
+#define BEACON_SIZE 6
+#define PING_SIZE   6
+#define PING_SIZE   6
+#define ERROR_SIZE  6
+#define REQ_SIZE    6
+#define ASYNC_SIZE  6
 
 #endif

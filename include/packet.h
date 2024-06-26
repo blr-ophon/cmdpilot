@@ -66,6 +66,13 @@ typedef struct{
     uint8_t CRCH:4;
 }__attribute__((packed)) RESPONSE_t;
 
+typedef struct{
+    uint8_t type:4;
+    uint16_t HeaderContent1;
+    uint8_t HeaderContent2;
+    uint8_t CRCH:4;
+}__attribute__((packed)) ANY_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef union{
@@ -74,6 +81,7 @@ typedef union{
     ERROR_t Error;
     ASYNC_t Async;
     RESPONSE_t Response;
+    ANY_t Any;
 }PacketHeader_t;
 
 

@@ -38,7 +38,8 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
     memcpy(pHandle->CTRLrxbuf, buf, BEACON_SIZE);
 
     //Send packet and check for error response
-    bool repeat = false;
+    time_t start_time = time(NULL);
+    bool repeat = true;
     do{
         MCPTL_sendCTRL(pHandle);
         int type = Packet_getType(pHandle->CTRLrxbuf);
@@ -55,6 +56,10 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
             default:
                 //Keep sending
                 break;
+        }
+        if(MCPTL_CheckTimeout(start_time, TIMEOUT)){
+            printf("Timeout: No Beacon Response from performer\n");
+            repeat = false;
         }
     }while(repeat);
 
@@ -79,6 +84,7 @@ int MCPTL_stateCONFIG(MCPTL_handle *pHandle, BEACON_t * LocalBeacon){
     memcpy(pHandle->CTRLtxbuf, buf, 256);
 
     BEACON_t PerformerBeacon;
+    time_t start_time = time(NULL);
     bool repeat = true;
     do{
         //Send packet and receive response
@@ -106,6 +112,10 @@ int MCPTL_stateCONFIG(MCPTL_handle *pHandle, BEACON_t * LocalBeacon){
                 //Keep sending beacons
                 break;
         }
+        if(MCPTL_CheckTimeout(start_time, TIMEOUT)){
+            printf("Timeout: No Beacon Response from performer\n");
+            repeat = false;
+        }
     }while(repeat);
 
     return rv;
@@ -129,7 +139,8 @@ int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
     memcpy(pHandle->CTRLtxbuf, buf, 256);
 
     //Send packet and check for error response
-    bool repeat = false;
+    time_t start_time = time(NULL);
+    bool repeat = true;
     do{
         MCPTL_sendCTRL(pHandle);
         uint8_t *ResponseBuf = pHandle->CTRLrxbuf;
@@ -148,6 +159,10 @@ int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
                 //Keep sending
                 break;
         }
+        if(MCPTL_CheckTimeout(start_time, TIMEOUT)){
+            printf("Timeout: No Ping Response from performer\n");
+            repeat = false;
+        }
     }while(repeat);
 
     return rv;
@@ -164,10 +179,6 @@ int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
 static int MCPTL_sendCTRL(MCPTL_handle *pHandle){
     //TODO: number of bytes to send and received inside handle
     int rv = 0;
-    if(pHandle->state != STATE_CONNECTED){ 
-        rv = -1;
-        goto out;
-    }
     memset(pHandle->CTRLrxbuf, 0, 256);
 
     int recv_bytes = 0;
@@ -295,4 +306,13 @@ static int MCPTL_CONFIG_UpdateBeacon(BEACON_t *LocalBeacon, BEACON_t *PerformerB
     LocalBeacon->RXS_Max = MIN(LocalBeacon->RXS_Max, PerformerBeacon->RXS_Max);
     LocalBeacon->TXS_Max = MIN(LocalBeacon->TXS_Max, PerformerBeacon->TXS_Max);
     LocalBeacon->TXA_Max = MIN(LocalBeacon->TXA_Max, PerformerBeacon->TXA_Max);
+}
+
+bool MCPTL_CheckTimeout(time_t start_time, int timeout) {
+    time_t current_time = time(NULL);
+    if (difftime(current_time, start_time) >= timeout) {
+        return 1;  // Timeout occurred
+    } else {
+        return 0;  // Timeout not yet occurred
+    }
 }

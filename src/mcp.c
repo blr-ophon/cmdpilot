@@ -1,12 +1,13 @@
 #include "mcp.h"
 #include "serialize.h"
 
+
 /*
  * Creates an MCPTL socket with two independent channels
  * and user defined parameters
  */
 MCPTL_handle *MCP_createHandle(char *port, long baudRate){
-    MCPTL_handle *pHandle = malloc(sizeof(MCPTL_handle));
+    MCPTL_handle *pHandle = calloc(1, sizeof(MCPTL_handle));
     pHandle->fd = UART_getfd(port, baudRate);
     pHandle->state = STATE_IDLE;
     pHandle->RXS_Max = RXS_MAX;
@@ -34,15 +35,11 @@ int MCP_keepAlive(MCPTL_handle *pHandle, bool condition){
         alive = true;
     }
 
-    int timeout = 5;    //seconds
     time_t startTime = time(NULL);
-    time_t curTime;
     while(!alive){
         rv = MCP_connect(pHandle);
-        curTime = time(NULL);
-        if(curTime-startTime >= timeout){
-            perror("Keep Alive Timeout");
-            rv = -EKEEPALIVE_TIMEOUT;
+        if(MCPTL_CheckTimeout(startTime, 3)){
+            rv = -1;
             break;
         }
     }
@@ -63,26 +60,32 @@ int MCP_connect(MCPTL_handle *pHandle){
                 /*
                  * Send BEACON until receiving a BEACON.
                  */
+                printf("State: IDLE\n");
                 MCPTL_stateIDLE(pHandle, &LocalBeacon);
                 break;
             case STATE_CONFIGURING:
+                printf("State: CONFIGURING\n");
                 /*
                  * Send modified BEACONs until the performer agrees.
                  */
                 MCPTL_stateCONFIG(pHandle, &LocalBeacon);
                 break;
             case STATE_CONNECTING:
+                printf("State: CONNECTING\n");
                 /*
                  * Send PING until a PING response is received
                  */
                 MCPTL_stateCONNECT(pHandle);
                 break;
             default:
-                perror("Bad handle");
+                printf("MCP_connect: Bad Handle\n");
                 rv = -1;
                 goto out;
         }
     }
+
+    printf("State: CONNECTED\n");
+
 
 out:
     return rv;

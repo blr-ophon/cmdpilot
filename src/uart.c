@@ -13,6 +13,9 @@ int UART_getfd(char *port, int baud_rate){
         printf("Error opening serial port\n");
         perror("open");
         goto out;
+    }else{
+        printf("Serial Port: %s\n", port);
+        printf("Baud Rate: %d\n", baud_rate);
     }
 
     //Set up serial port

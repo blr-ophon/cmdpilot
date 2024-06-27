@@ -4,9 +4,9 @@
 //TODO: define
 
 #define MCPVERSION  0   
-#define RXS_MAX     64   //TODO
-#define TXS_MAX     64   //TODO
-#define TXA_MAX     64   //TODO
+#define RXS_MAX     63      //max  
+#define TXS_MAX     127     //max
+#define TXA_MAX     127     //max
 #define BAUD_RATE   1843200
 
 #define BEACON_SIZE 6

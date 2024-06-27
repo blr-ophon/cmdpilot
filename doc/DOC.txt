@@ -30,3 +30,9 @@ mcptl:      Functions for connecting, sending and receiving bytes. Similar to
 packet:     Constains header/packet definitions, functions to set them and CRC checks
 serialize:  Decoding and Encoding of Packets
 uart:       Low level functions to read and receives bytes through serial port
+decode:     Functions to translate packets in byte stream format into human readable
+            information. Used for debugging
+registry:   Translate registers in raw structure formats to human readable information.
+            Used in get/set register operations.
+
+

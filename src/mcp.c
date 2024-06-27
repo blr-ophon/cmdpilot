@@ -38,7 +38,7 @@ int MCP_keepAlive(MCPTL_handle *pHandle, bool condition){
     time_t startTime = time(NULL);
     while(!alive){
         rv = MCP_connect(pHandle);
-        if(MCPTL_CheckTimeout(startTime, 3)){
+        if(MCPTL_CheckTimeout(startTime, TIMEOUT)){
             rv = -1;
             break;
         }
@@ -52,7 +52,7 @@ int MCP_connect(MCPTL_handle *pHandle){
     int rv = 0;
     //restart connection from the beginning
     BEACON_t LocalBeacon;
-    Beacon_set(&LocalBeacon, MCPVERSION, 0, RXS_MAX, TXS_MAX, TXS_MAX, 0);
+    Beacon_set(&LocalBeacon, MCPVERSION, 0, RXS_MAX, TXS_MAX, TXA_MAX, 0);
 
     while(pHandle->state != STATE_CONNECTED){
         switch(pHandle->state){

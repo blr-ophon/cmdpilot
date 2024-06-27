@@ -51,5 +51,6 @@ int MCPTL_stateCONFIG(MCPTL_handle *pHandle, BEACON_t *LocalBeacon);
 int MCPTL_stateCONNECT(MCPTL_handle *pHandle);
 
 bool MCPTL_CheckTimeout(time_t start_time, int timeout);
+void test_sendBeacon(MCPTL_handle *pHandle);
 
 #endif

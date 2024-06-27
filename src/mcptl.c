@@ -16,6 +16,41 @@ static int MCPTL_recvPacket(MCPTL_handle *pHandle, uint8_t channel, int *n);
 static int MCPTL_sendCTRL(MCPTL_handle *pHandle);
 static int MCPTL_sendASYNC(MCPTL_handle *pHandle, uint8_t flags);
 static int MCPTL_CONFIG_UpdateBeacon(BEACON_t *LocalBeacon, BEACON_t *PerformerBeacon);
+static int MCPTL_BufDump(MCPTL_handle *pHandle);
+
+void test_sendBeacon(MCPTL_handle *pHandle){
+    BEACON_t LocalBeacon;
+    Beacon_set(&LocalBeacon, MCPVERSION, 0, RXS_MAX, TXS_MAX, TXA_MAX, 0);
+
+    //Create packet 
+    Packet_t packet;
+    packet.header.Beacon = LocalBeacon;
+    packet.Payload = NULL;
+    packet.Payload_size = 0;
+    packet.CRC = 0;
+
+    //Serialize packet and move to sync channel
+    uint8_t buf[10] = {0};
+    Serialize_Packet(&packet, buf, BEACON_SIZE);
+    printf("buf:\n");
+    for(int i = 0; i < 10; i++){
+        printf("%x ", buf[i]);
+    }
+    memcpy(pHandle->CTRLtxbuf, buf, BEACON_SIZE);
+    MCPTL_BufDump(pHandle);
+
+    //Send packet and check for error response
+    Decode_Packet(pHandle->CTRLtxbuf, 0);
+    MCPTL_sendPacket(pHandle, CHANNEL_CTRL, BEACON_SIZE);
+
+    //Receive Response packet
+    int recv_bytes = 0;
+    while(recv_bytes == 0){
+        MCPTL_recvPacket(pHandle, CHANNEL_CTRL, &recv_bytes);
+    }
+    //Decode received packet
+    Decode_Packet(pHandle->CTRLrxbuf, 1);
+}
 
 
 
@@ -35,7 +70,7 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
     //Serialize packet and move to sync channel
     uint8_t buf[BEACON_SIZE];
     Serialize_Packet(&packet, buf, BEACON_SIZE);
-    memcpy(pHandle->CTRLrxbuf, buf, BEACON_SIZE);
+    memcpy(pHandle->CTRLtxbuf, buf, BEACON_SIZE);
 
     //Send packet and check for error response
     time_t start_time = time(NULL);
@@ -63,6 +98,8 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
         }
     }while(repeat);
 
+    MCPTL_BufDump(pHandle);
+    printf("\n");
     return rv;
 }
 
@@ -179,15 +216,14 @@ int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
 static int MCPTL_sendCTRL(MCPTL_handle *pHandle){
     //TODO: number of bytes to send and received inside handle
     int rv = 0;
-    memset(pHandle->CTRLrxbuf, 0, 256);
 
     int recv_bytes = 0;
     bool crc_ok = false;
     int error_code = 0;
 
     //Main loop
-    while(recv_bytes == 0 && !crc_ok && error_code){
-        MCPTL_sendPacket(pHandle, CHANNEL_CTRL, 256);
+    while(recv_bytes <= 0 && !crc_ok && error_code){
+        MCPTL_sendPacket(pHandle, CHANNEL_CTRL, 6);
         //TODO:wait T ms
         
         //read response
@@ -242,7 +278,12 @@ static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
     rv = UART_Send(pHandle->fd, offset, 4);
     offset += 4;
 
-    //TODO:intra-packet pause
+    //intra-packet pause
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 1000000L; // 1 millisecond = 1,000,000 nanoseconds
+    nanosleep(&ts, NULL);
+
     //send payload
     UART_Send(pHandle->fd, offset, payload_size);
     offset += payload_size;
@@ -250,7 +291,6 @@ static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
     //send CRC
     UART_Send(pHandle->fd, offset, 2);
 
-    Decode_Packet(txBuf, 0);
 out:
     return rv;
 }
@@ -285,8 +325,6 @@ static int MCPTL_recvPacket(MCPTL_handle *pHandle, uint8_t channel, int *n){
         *n = rv;
     }
 
-    Decode_Packet(rxBuf, 1);
-
 out:
     return rv;
 }
@@ -315,4 +353,16 @@ bool MCPTL_CheckTimeout(time_t start_time, int timeout) {
     } else {
         return 0;  // Timeout not yet occurred
     }
+}
+
+static int MCPTL_BufDump(MCPTL_handle *pHandle){
+    printf("TX:\n");
+    for(int i = 0; i < pHandle->TXS_Max; i++){
+        printf("%x ",pHandle->CTRLtxbuf[i]);
+    }
+    printf("\nRX:\n");
+    for(int i = 0; i < pHandle->RXS_Max; i++){
+        printf("%x ",pHandle->CTRLrxbuf[i]);
+    }
+    printf("\n");
 }

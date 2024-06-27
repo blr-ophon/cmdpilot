@@ -21,12 +21,12 @@ void Decode_Packet(uint8_t *PKTbuf, bool recv){
             printf("%s PING\n", recv? recv_str : sent_str);
             PING_t PingPKT = header->Ping;
             printf("C: %d\nN: %d\nLLID: %d\nNumber: %d\n\n",
-                    PingPKT.C1, PingPKT.N1, PingPKT.LLID, PingPKT.Number);
+                    PingPKT.C, PingPKT.N, PingPKT.LLID, PingPKT.Number);
             break;
         case PKTTYPE_ERROR:      
             printf("%s ERROR\n", recv? recv_str : sent_str);
             ERROR_t ErrorPKT = header->Error;
-            printf("Error Code: %d\n\n", ErrorPKT.ErrorCode1);
+            printf("Error Code: %d\n\n", ErrorPKT.ErrorCode);
             break;
         case PKTTYPE_REQUEST_ASYNC:
             printf("%s ASYNC\n", recv? recv_str : sent_str);

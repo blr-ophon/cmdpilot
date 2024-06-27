@@ -34,10 +34,8 @@ typedef struct{
 
 typedef struct{
     uint8_t type:4;
-    uint8_t C1:1;
-    uint8_t C2:1;
-    uint8_t N1:1;
-    uint8_t N2:1;
+    uint8_t C:1;
+    uint8_t N:1;
     uint8_t LLID:4;
     uint16_t Number;
     uint8_t CRCH:4;
@@ -45,33 +43,27 @@ typedef struct{
 
 typedef struct{
     uint8_t type:4;
-    uint8_t reserved1:4;
-    uint8_t ErrorCode1;
-    uint8_t ErrorCode2; //Copy of errorcode1
-    uint8_t reserved2:4;
+    uint8_t ErrorCode;
     uint8_t CRCH:4;
 }__attribute__((packed)) ERROR_t;
 
 typedef struct{
     uint8_t type:4;
     uint16_t payloadLength:13;
-    uint16_t reserved:11;
     uint8_t CRCH:4;
 }__attribute__((packed)) ASYNC_t;
 
 typedef struct{
     uint8_t type:4;
     uint16_t payloadLength:13;
-    uint16_t reserved:11;
     uint8_t CRCH:4;
 }__attribute__((packed)) RESPONSE_t;
 
 typedef struct{
     uint8_t type:4;
-    uint16_t HeaderContent1;
-    uint8_t HeaderContent2;
+    uint32_t HeaderContent:24;
     uint8_t CRCH:4;
-}__attribute__((packed)) ANY_t;
+}ANY_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -87,6 +79,7 @@ typedef union{
 
 typedef struct{
     PacketHeader_t header;
+    int type;
     uint8_t *Payload;
     uint16_t CRC;               //Optional
     uint8_t Payload_size;

@@ -1,6 +1,5 @@
 #include "cmdpilot.h"
 #include "mcp.h"
-#include "test.h"
 
 void CMDPilot(int argc, char *argv[]);
 
@@ -12,15 +11,7 @@ int main(int argc, char *argv[]){
             BAUD_RATE 
     );
     //MCP_connect(pHandle);
-    //test_sendBeacon(pHandle);
-    printf("%u %u %u %u %u %u\n",
-            sizeof(BEACON_t),
-            sizeof(PING_t),
-            sizeof(ERROR_t),
-            sizeof(ASYNC_t),
-            sizeof(RESPONSE_t),
-            sizeof(ANY_t)
-    );
+    test_sendBeacon(pHandle);
 
 
 

@@ -24,18 +24,15 @@ void test_sendBeacon(MCPTL_handle *pHandle){
 
     //Create packet 
     Packet_t packet;
+    packet.type = PKTTYPE_BEACON;
     packet.header.Beacon = LocalBeacon;
     packet.Payload = NULL;
     packet.Payload_size = 0;
     packet.CRC = 0;
 
     //Serialize packet and move to sync channel
-    uint8_t buf[10] = {0};
+    uint8_t buf[BEACON_SIZE] = {0};
     Serialize_Packet(&packet, buf, BEACON_SIZE);
-    printf("buf:\n");
-    for(int i = 0; i < 10; i++){
-        printf("%x ", buf[i]);
-    }
     memcpy(pHandle->CTRLtxbuf, buf, BEACON_SIZE);
     MCPTL_BufDump(pHandle);
 
@@ -63,17 +60,15 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
 
     //Create packet 
     Packet_t packet;
-    packet.header.Beacon = *LocalBeacon;
-    packet.Payload = NULL;
-    packet.Payload_size = 0;
-
+    PacketHeader_t pktheader;
+    pktheader.Beacon = *LocalBeacon;
+    Packet_set(&packet, &pktheader, PKTTYPE_BEACON, NULL, 0);
     //Serialize packet and move to sync channel
     uint8_t buf[BEACON_SIZE];
     Serialize_Packet(&packet, buf, BEACON_SIZE);
     memcpy(pHandle->CTRLtxbuf, buf, BEACON_SIZE);
 
     //Send packet and check for error response
-    time_t start_time = time(NULL);
     bool repeat = true;
     do{
         MCPTL_sendCTRL(pHandle);
@@ -91,10 +86,6 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
             default:
                 //Keep sending
                 break;
-        }
-        if(MCPTL_CheckTimeout(start_time, TIMEOUT)){
-            printf("Timeout: No Beacon Response from performer\n");
-            repeat = false;
         }
     }while(repeat);
 
@@ -214,23 +205,34 @@ int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
  * Supposes packet is already serialized in pHandle buffer.
  */
 static int MCPTL_sendCTRL(MCPTL_handle *pHandle){
-    //TODO: number of bytes to send and received inside handle
     int rv = 0;
 
-    int recv_bytes = 0;
-    bool crc_ok = false;
-    int error_code = 0;
 
+    bool resend = false;
     //Main loop
-    while(recv_bytes <= 0 && !crc_ok && error_code){
+    while(resend){
         MCPTL_sendPacket(pHandle, CHANNEL_CTRL, 6);
-        //TODO:wait T ms
         
         //read response
-        MCPTL_recvPacket(pHandle, CHANNEL_CTRL, &recv_bytes);
-        error_code = Packet_checkError(pHandle->SYNCrxBuf);
-        crc_ok = MCPTL_CRCCheck(pHandle->SYNCrxBuf, recv_bytes);
+        int recv_bytes = 0;
+        time_t start_time = time(NULL);
+        while(recv_bytes <= 0){
+            MCPTL_recvPacket(pHandle, CHANNEL_CTRL, &recv_bytes);
+            if(MCPTL_CheckTimeout(start_time, TIMEOUT)){
+                printf("Timeout: No Beacon Response from performer\n");
+                break;
+            }
+        }
+
+        //Check for bad responses and ERROR responses
+        if(Packet_checkBadPacket(pHandle->CTRLrxbuf)){
+            pHandle->state = STATE_IDLE;
+            rv = -1;
+            goto out;
+        }
+        resend = Packet_checkError(pHandle->CTRLrxbuf)? true : false;
     }
+
 out:
     return rv;
 }
@@ -278,15 +280,17 @@ static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
     rv = UART_Send(pHandle->fd, offset, 4);
     offset += 4;
 
-    //intra-packet pause
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 1000000L; // 1 millisecond = 1,000,000 nanoseconds
-    nanosleep(&ts, NULL);
+    if(payload_size){
+        //intra-packet pause (1ms)
+        struct timespec ts;
+        ts.tv_sec = 0;
+        ts.tv_nsec = 1000000L; // 1 millisecond = 1,000,000 nanoseconds
+        nanosleep(&ts, NULL);
 
-    //send payload
-    UART_Send(pHandle->fd, offset, payload_size);
-    offset += payload_size;
+        //send payload
+        UART_Send(pHandle->fd, offset, payload_size);
+        offset += payload_size;
+    }
 
     //send CRC
     UART_Send(pHandle->fd, offset, 2);

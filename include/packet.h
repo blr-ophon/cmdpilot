@@ -6,7 +6,7 @@
  */
 
 #include <stdint.h>
-#include <stdint.h>
+#include <stdbool.h>
 #define BADCRC  1
 
 typedef enum{
@@ -93,8 +93,10 @@ void Beacon_decode(BEACON_t *beacon, uint8_t *buf);
 void Beacon_set(BEACON_t *beacon, uint8_t version, uint8_t CRC, uint8_t RXS_Max, 
         uint8_t TXS_Max, uint8_t TXA_Max, uint8_t CRCH);
 void Ping_set(PING_t *ping, uint8_t C, uint8_t N, uint8_t LLID, uint16_t Number, uint8_t CRCH);
+void Packet_set(Packet_t *packet, PacketHeader_t *header, int type, uint8_t *payload, int payload_size);
 
 int Packet_checkError(uint8_t *PKTbuf);
 uint8_t Packet_getType(uint8_t *PKTbuf);
+bool Packet_checkBadPacket(uint8_t *PKTbuf);
 
 #endif

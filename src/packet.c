@@ -26,6 +26,14 @@ void Ping_set(PING_t *ping, uint8_t C, uint8_t N, uint8_t LLID, uint16_t Number,
     ping->CRCH = CRCH;
 }
 
+void Packet_set(Packet_t *packet, PacketHeader_t *header, int type, uint8_t *payload, int payload_size){
+    packet->header = *header;
+    packet->type = type;
+    packet->Payload = payload;
+    packet->Payload_size = payload_size;
+    packet->CRC = 0;
+}
+
 
 /*
  * Returns 0 if packet is not of error type or the error code, otherwise
@@ -51,3 +59,44 @@ uint8_t Packet_getType(uint8_t *PKTbuf){
     int type = ((*pHeader) & 0x0f);   
     return type;
 }
+
+
+static bool Packet_checkBadCRCH(uint8_t *PKTbuf, int size){
+#ifdef CRC_CHECK
+    uint16_t crch = (PKTbuf[3] & 0xf0) >> 4;
+    if(0){
+        return true;
+    }
+#endif
+    return false;
+}
+
+/*
+ * Check for bad header (incorrect CRCH) and invalid packet
+ * type. TODO: chech payload length
+ */
+bool Packet_checkBadPacket(uint8_t *PKTbuf){
+    int rv = 0;
+    //Chech type
+    uint8_t type = Packet_getType(PKTbuf);
+    switch(type){
+        case PKTTYPE_BEACON:
+        case PKTTYPE_PING:
+        case PKTTYPE_ERROR:
+        case PKTTYPE_REQUEST_ASYNC:
+        case PKTTYPE_RESPONSE:
+            break;
+        default:
+            rv = -1;
+            goto out;
+    }
+
+    if(Packet_checkBadCRCH(PKTbuf, 6)){
+        rv = -1;
+        goto out;
+    }
+
+out:
+    return rv;
+}
+

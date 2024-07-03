@@ -4,7 +4,7 @@
  * Currently used for debugging
  */
 void Decode_Packet(uint8_t *PKTbuf, bool recv){
-    PacketHeader_t *header = (PacketHeader_t*)PKTbuf;
+    TLPacketHeader_t *header = (TLPacketHeader_t*)PKTbuf;
     
     char *recv_str = "\n<< ";
     char *sent_str = "\n>> ";

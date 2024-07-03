@@ -1,8 +1,7 @@
 #include "timer.h"
 
-/*
- * return current time in milliseconds
- */
+
+// Return current time in milliseconds
 long Timer_currentMillis(void) {
 	struct timeval tp;
 
@@ -12,7 +11,8 @@ long Timer_currentMillis(void) {
 	// Convert the microseconds to milliseconds by dividing by 1000
 }
 
-// Function to check timeout in milliseconds
+
+// Check timeout in milliseconds
 bool Timer_checkTimeout(long start_time, int timeout_ms){
     long current_time = Timer_currentMillis();
     long elapsed_ms = current_time - start_time;
@@ -27,6 +27,8 @@ bool Timer_checkTimeout(long start_time, int timeout_ms){
     }
 }
 
+
+// Wait time_ms milliseconds
 void Timer_msPause(int time_ms){
     //intra-packet pause (1ms)
     struct timespec ts;

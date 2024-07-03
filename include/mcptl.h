@@ -6,7 +6,7 @@
  */
 
 #include <stdbool.h>
-#include "packet.h"
+#include "tlpacket.h"
 #include "uart.h"
 #include "timer.h"
 

@@ -3,8 +3,8 @@
 
 
 /*
- * Creates an MCPTL socket with two independent channels
- * and user defined parameters
+ * Creates an MCPTL Handle containing the communication channels
+ * To be used in the transport layer
  */
 MCPTL_handle *MCP_createHandle(char *port, long baudRate){
     int fd = UART_getfd(port, baudRate);
@@ -27,37 +27,13 @@ void MCP_freeHandle(MCPTL_handle *pHandle){
 }
 
 
-/*
- * TODO
- */
-int MCP_keepAlive(MCPTL_handle *pHandle, bool condition){
-    int rv = 0;
-
-    bool alive = false;
-    if(condition){
-        //send PING
-        //receive and check response
-        alive = true;
-    }
-
-    long startTime = Timer_currentMillis();
-    while(!alive){
-        rv = MCP_connect(pHandle);
-        if(Timer_checkTimeout(startTime, TIMEOUT)){
-            rv = -1;
-            break;
-        }
-    }
-    
-    return rv; 
-}
 
 
 int MCP_connect(MCPTL_handle *pHandle){
     int rv = 0;
     //restart connection from the beginning
     BEACON_t LocalBeacon;
-    Beacon_set(&LocalBeacon, MCPVERSION, 0, RXS_MAX, TXS_MAX, TXA_MAX, 0);
+    TLPacket_BEACONSet(&LocalBeacon, MCPVERSION, 0, RXS_MAX, TXS_MAX, TXA_MAX, 0);
 
     while(pHandle->state != STATE_CONNECTED){
         switch(pHandle->state){
@@ -68,8 +44,8 @@ int MCP_connect(MCPTL_handle *pHandle){
                 printf("State: IDLE\n");
                 if(MCPTL_stateIDLE(pHandle, &LocalBeacon) < 0){
                     printf("(MCP_connect) Unable to start configuring\n");
-                    rv = -1;
-                    goto out;
+                    //rv = -1;
+                    //goto out;
                 }
                 break;
             case STATE_CONFIGURING:
@@ -117,7 +93,12 @@ int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id,
 
     uint8_t buf[256];
     Serialize_Command(&command, buf, 256);
-    UART_Send(pHandle->fd, pHandle->SYNCtxBuf, 256);
+    /*
+     * TODO
+     * Encapsulate command into REQUEST packet
+     * Call sendSYNC
+     * Decapsulate RESPONSE packet
+     */
 
 out:
     return rv;
@@ -135,6 +116,26 @@ void MCP_recvResponse(MCPTL_handle *pHandle, Response_t *response){
         //read payload    
         memcpy(response->payload, pHandle->SYNCrxBuf, recv_bytes-1);
     }
+    //TODO: encapsulate into response packet
+}
+
+/*
+ * TODO
+ */
+int MCP_keepAlive(MCPTL_handle *pHandle, bool condition){
+    int rv = 0;
+
+    bool connected = false;
+    if(condition){
+        //send PING
+        //receive and check response
+        connected = true;
+    }
+    if(!connected){ 
+        rv |= MCP_connect(pHandle);
+    }
+    
+    return rv; 
 }
 
 /* TODO */

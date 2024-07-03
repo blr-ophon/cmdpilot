@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <termios.h>
 
-#include "error.h"
 
 
 int UART_getfd(char *port, int baud_rate);

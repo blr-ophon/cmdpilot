@@ -38,7 +38,7 @@ out:
 
 
 /*
- * Writes n bytes from tx_buf on fd
+ * Writes n bytes from tx_buf on fd 
  */
 int UART_Send(int fd, uint8_t *tx_buf, int n){
     int rv = 0;

@@ -16,6 +16,6 @@
 #define REQ_SIZE    6
 #define ASYNC_SIZE  6
 
-#define TIMEOUT 5000        //5s
+#define NORESP_TIMEOUT 5000 //5s
 
 #endif

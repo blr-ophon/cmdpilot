@@ -1,14 +1,9 @@
 #ifndef MCP_H
 #define MCP_H
 
-/*
- * TODO: sendSYNC ERROR_BREAK flag seems useless
- */
-
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 #include "error.h"
 #include "mcptl.h"
 #include "config.h"
@@ -40,9 +35,6 @@ typedef enum{
     CID_FAULT_ACK               =   0x0007,
 }Command_ID;
 
-
-
-
 /*
  * RESPONSE
  */
@@ -69,12 +61,17 @@ typedef enum{
 
 
 
-
+// Create and free Transport Layer context 
 MCPTL_handle *MCP_createHandle(char *port, long baud_rate);
 void MCP_freeHandle(MCPTL_handle *pHandle);
 
+// Attempt to connect to performer
 int MCP_connect(MCPTL_handle *pHandle);
+
+// Send COMMAND service to performer
 int MCP_sendCommand(MCPTL_handle *pHandle, uint8_t motor_id, uint8_t command_id, uint8_t *payload, int pl_len);
+
+// Read and decode RESPONSE 
 void MCP_recvResponse(MCPTL_handle *pHandle, Response_t *response);
 
 #endif

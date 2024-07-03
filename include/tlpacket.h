@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
+
 #define BADCRC  1
 
 typedef enum{
@@ -18,9 +20,11 @@ typedef enum{
 }Packet_type;
 
 
-////////////////////////////////////////////////////////////////////////////////
-///32-bit fields of packet headers
-////////////////////////////////////////////////////////////////////////////////
+
+
+/*
+ * Types of TLPacket Headers
+ */
 
 typedef struct{
     uint8_t type:4;
@@ -30,7 +34,7 @@ typedef struct{
     uint8_t TXS_Max:7;
     uint8_t TXA_Max:7;
     uint8_t CRCH:4;
-}__attribute__((packed)) BEACON_t;
+}BEACON_t;
 
 typedef struct{
     uint8_t type:4;
@@ -39,25 +43,25 @@ typedef struct{
     uint8_t LLID:4;
     uint16_t Number;
     uint8_t CRCH:4;
-}__attribute__((packed)) PING_t;
+}PING_t;
 
 typedef struct{
     uint8_t type:4;
     uint8_t ErrorCode;
     uint8_t CRCH:4;
-}__attribute__((packed)) ERROR_t;
+}ERROR_t;
 
 typedef struct{
     uint8_t type:4;
     uint16_t payloadLength:13;
     uint8_t CRCH:4;
-}__attribute__((packed)) ASYNC_t;
+}ASYNC_t;
 
 typedef struct{
     uint8_t type:4;
     uint16_t payloadLength:13;
     uint8_t CRCH:4;
-}__attribute__((packed)) RESPONSE_t;
+}RESPONSE_t;
 
 typedef struct{
     uint8_t type:4;
@@ -65,7 +69,13 @@ typedef struct{
     uint8_t CRCH:4;
 }ANY_t;
 
-////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+/*
+ * TLPacket structs
+ */
 
 typedef union{
     BEACON_t Beacon;
@@ -74,29 +84,44 @@ typedef union{
     ASYNC_t Async;
     RESPONSE_t Response;
     ANY_t Any;
-}PacketHeader_t;
+}TLPacketHeader_t;
 
 
 typedef struct{
-    PacketHeader_t header;
+    TLPacketHeader_t header;
     int type;
     uint8_t *Payload;
-    uint16_t CRC;               //Optional
+    uint16_t CRC;               
     uint8_t Payload_size;
-}Packet_t;
+}TLPacket_t;
 
-////////////////////////////////////////////////////////////////////////////////
-/// Functions
-////////////////////////////////////////////////////////////////////////////////
 
-void Beacon_decode(BEACON_t *beacon, uint8_t *buf);
-void Beacon_set(BEACON_t *beacon, uint8_t version, uint8_t CRC, uint8_t RXS_Max, 
+
+
+
+
+/*
+ * Set Header structs
+ */
+void TLPacket_BEACONSet(BEACON_t *beacon, uint8_t version, uint8_t CRC, uint8_t RXS_Max, 
         uint8_t TXS_Max, uint8_t TXA_Max, uint8_t CRCH);
-void Ping_set(PING_t *ping, uint8_t C, uint8_t N, uint8_t LLID, uint16_t Number, uint8_t CRCH);
-void Packet_set(Packet_t *packet, PacketHeader_t *header, int type, uint8_t *payload, int payload_size);
+void TLPacket_PINGSet(PING_t *ping, uint8_t C, uint8_t N, uint8_t LLID, uint16_t Number, uint8_t CRCH);
 
-int Packet_checkError(uint8_t *PKTbuf);
-uint8_t Packet_getType(uint8_t *PKTbuf);
-bool Packet_checkBadPacket(uint8_t *PKTbuf);
+
+/*
+ * Create and free TLPackets
+ */
+TLPacket_t *TLPacket_Create(TLPacketHeader_t *header, int type, uint8_t *payload, int payload_size);
+void TLPacket_Free(TLPacket_t *packet);
+
+
+//Checks for an ERROR packet and returns it's error code
+int TLPacket_checkError(uint8_t *PKTbuf);
+
+//Returns packet type
+uint8_t TLPacket_getType(uint8_t *PKTbuf);
+
+//Checks if TLPacket is of a valid type and it's CRCH
+bool TLPacket_checkBadPacket(uint8_t *PKTbuf);
 
 #endif

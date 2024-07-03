@@ -9,14 +9,14 @@
 #define MASK13 0x1fff
 
 /* Local Functions */
-static uint32_t Serialize_Header(PacketHeader_t *header, int Packet_type);
+static uint32_t Serialize_Header(TLPacketHeader_t *header, int TLPacket_type);
 
 
 
 /*
  * Serialize packet struct into byte stream
  */
-int Serialize_Packet(Packet_t *packet, uint8_t *buf, int buf_size){
+int Serialize_Packet(TLPacket_t *packet, uint8_t *buf, int buf_size){
     int rv = 0;
     if(buf_size < 6 + packet->Payload_size){
         rv = -1;
@@ -60,9 +60,9 @@ out:
 }
 
 
-static uint32_t Serialize_Header(PacketHeader_t *header, int Packet_type){
+static uint32_t Serialize_Header(TLPacketHeader_t *header, int TLPacket_type){
     uint32_t rv = 0;
-    switch(Packet_type){
+    switch(TLPacket_type){
         case PKTTYPE_BEACON:    
             rv |= (header->Beacon.type & MASK4)     << 0; 
             rv |= (header->Beacon.version & MASK3)  << 4;

@@ -38,6 +38,8 @@ void test_sendBeacon(MCPTL_handle *pHandle){
 
     //Send packet and check for error response
     Decode_Packet(pHandle->CTRLtxbuf, 0);
+    MCPTL_sendCTRL(pHandle);
+    /*
     MCPTL_sendPacket(pHandle, CHANNEL_CTRL, BEACON_SIZE);
 
     //Receive Response packet
@@ -47,6 +49,7 @@ void test_sendBeacon(MCPTL_handle *pHandle){
     }
     //Decode received packet
     Decode_Packet(pHandle->CTRLrxbuf, 1);
+    */
 }
 
 
@@ -60,197 +63,103 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
 
     //Create packet 
     Packet_t packet;
-    PacketHeader_t pktheader;
-    pktheader.Beacon = *LocalBeacon;
-    Packet_set(&packet, &pktheader, PKTTYPE_BEACON, NULL, 0);
+    packet.type = PKTTYPE_BEACON;
+    packet.Payload = NULL;
+    packet.Payload_size = 0;
+    packet.CRC = 0;
+    //Packet_set(&packet, &pktheader, PKTTYPE_BEACON, NULL, 0);
+    packet.header.Beacon = *LocalBeacon;
+    
     //Serialize packet and move to sync channel
-    uint8_t buf[BEACON_SIZE];
+    uint8_t buf[BEACON_SIZE] = {0};
     Serialize_Packet(&packet, buf, BEACON_SIZE);
     memcpy(pHandle->CTRLtxbuf, buf, BEACON_SIZE);
 
-    //Send packet and check for error response
-    bool repeat = true;
-    do{
+    //Send packet. If an error response is received, resend previous packet.
+    //If a bad packet is received, restart connection procedure.
+    bool resend = true;
+    while(resend){
+        //send packet
+        Decode_Packet(pHandle->CTRLtxbuf, 0);
         MCPTL_sendCTRL(pHandle);
-        int type = Packet_getType(pHandle->CTRLrxbuf);
-        switch(type){
-            case PKTTYPE_BEACON:
-                pHandle->state = STATE_CONFIGURING;
-                repeat = false;
-                break;
-            case PKTTYPE_ERROR:
-                pHandle->state = STATE_IDLE;
-                rv = Packet_checkError(pHandle->CTRLrxbuf);
-                repeat = false;
-                break;
-            default:
-                //Keep sending
-                break;
+
+        //Check for bad responses 
+        if(Packet_checkBadPacket(pHandle->CTRLrxbuf)){
+            pHandle->state = STATE_IDLE;
+            rv = -1;
+            return rv;
         }
-    }while(repeat);
+        //Check for ERROR responses 
+        resend = Packet_checkError(pHandle->CTRLrxbuf)? true : false;
+    }
+
+    int type = Packet_getType(pHandle->CTRLrxbuf);
+    switch(type){
+        case PKTTYPE_BEACON:
+            pHandle->state = STATE_CONFIGURING;
+            break;
+        default: //Unexpected packet received
+            pHandle->state = STATE_IDLE;
+            rv = -1;
+            break;
+    }
+
 
     MCPTL_BufDump(pHandle);
     printf("\n");
     return rv;
 }
 
-/*
- * Exchanges Beacon with performer until both agree on parameters
- */
-int MCPTL_stateCONFIG(MCPTL_handle *pHandle, BEACON_t * LocalBeacon){
-    int rv = 0;     //timeout, error
-
-    //Create packet 
-    Packet_t packet;
-    packet.header.Beacon = *LocalBeacon;
-    packet.Payload = 0;
-    packet.CRC = 0;
-
-    //Serialize packet and move to control channel
-    uint8_t buf[256];
-    Serialize_Packet(&packet, buf, 256);
-    memcpy(pHandle->CTRLtxbuf, buf, 256);
-
-    BEACON_t PerformerBeacon;
-    time_t start_time = time(NULL);
-    bool repeat = true;
-    do{
-        //Send packet and receive response
-        MCPTL_sendCTRL(pHandle);
-        uint8_t *ResponseBuf = pHandle->CTRLrxbuf;
-
-        int type = Packet_getType(ResponseBuf);
-        switch(type){
-            case PKTTYPE_BEACON:
-                //Keep modifying and changing beacons until the response is the same
-                if(!memcmp(pHandle->CTRLrxbuf, ResponseBuf, sizeof(PacketHeader_t))){
-                    pHandle->state = STATE_CONNECTING;
-                    repeat = false;
-                }else{
-                    Beacon_decode(&PerformerBeacon, ResponseBuf);
-                    MCPTL_CONFIG_UpdateBeacon(LocalBeacon, &PerformerBeacon);
-                }
-                break;
-            case PKTTYPE_ERROR:
-                pHandle->state = STATE_IDLE;
-                rv = Packet_checkError(ResponseBuf);
-                repeat = false;
-                break;
-            default:
-                //Keep sending beacons
-                break;
-        }
-        if(MCPTL_CheckTimeout(start_time, TIMEOUT)){
-            printf("Timeout: No Beacon Response from performer\n");
-            repeat = false;
-        }
-    }while(repeat);
-
-    return rv;
-}
-
-/*
- * Sends PING and awaits for response. If there is a PING response,
- * the devices go to connected state
- */
-int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
-    int rv = 0;     //timeout, error
-    //Create packet 
-    Packet_t packet;
-    Ping_set(&packet.header.Ping,0,0,0,0,0);
-    packet.Payload = 0;
-    packet.CRC = 0;
-
-    //Serialize packet and move to sync channel
-    uint8_t buf[256];
-    Serialize_Packet(&packet, buf, 256);
-    memcpy(pHandle->CTRLtxbuf, buf, 256);
-
-    //Send packet and check for error response
-    time_t start_time = time(NULL);
-    bool repeat = true;
-    do{
-        MCPTL_sendCTRL(pHandle);
-        uint8_t *ResponseBuf = pHandle->CTRLrxbuf;
-        int type = Packet_getType(ResponseBuf);
-        switch(type){
-            case PKTTYPE_PING:
-                repeat = false;
-                pHandle->state = STATE_CONNECTED;
-                break;
-            case PKTTYPE_ERROR:
-                repeat = false;
-                pHandle->state = STATE_IDLE;
-                rv = Packet_checkError(ResponseBuf);
-                break;
-            default:
-                //Keep sending
-                break;
-        }
-        if(MCPTL_CheckTimeout(start_time, TIMEOUT)){
-            printf("Timeout: No Ping Response from performer\n");
-            repeat = false;
-        }
-    }while(repeat);
-
-    return rv;
-}
-
-
-
 
 /*
  * Send whatever is on Synchronous channel, checks
  * CRC of response
  * Supposes packet is already serialized in pHandle buffer.
+ * Returns 0 if no error occurred or a negative value otherwise 
  */
 static int MCPTL_sendCTRL(MCPTL_handle *pHandle){
     int rv = 0;
 
+    int packets_sent = 0;
+    int recv_bytes = 0;
 
-    bool resend = false;
+    bool resend = true;
     //Main loop
-    while(resend){
-        MCPTL_sendPacket(pHandle, CHANNEL_CTRL, 6);
+    long trySend_time = Timer_currentMillis();
+    for(; resend; packets_sent++){
+        rv |= MCPTL_sendPacket(pHandle, CHANNEL_CTRL, 6);
         
-        //read response
-        int recv_bytes = 0;
-        time_t start_time = time(NULL);
+        //try to read a response for 10ms
+        recv_bytes = 0;
+        long waitResp_time = Timer_currentMillis();
         while(recv_bytes <= 0){
-            MCPTL_recvPacket(pHandle, CHANNEL_CTRL, &recv_bytes);
-            if(MCPTL_CheckTimeout(start_time, TIMEOUT)){
-                printf("Timeout: No Beacon Response from performer\n");
+            rv |= MCPTL_recvPacket(pHandle, CHANNEL_CTRL, &recv_bytes);
+            if(Timer_checkTimeout(waitResp_time, 10)){
                 break;
             }
         }
-
-        //Check for bad responses and ERROR responses
-        if(Packet_checkBadPacket(pHandle->CTRLrxbuf)){
-            pHandle->state = STATE_IDLE;
-            rv = -1;
-            goto out;
+        if(recv_bytes > 0){
+            resend = false;
+        }else{
+            //Keep resending for 5 seconds
+            if(Timer_checkTimeout(trySend_time, 5000)){
+                printf("(MCPTL_sendCTRL)%d packets sent. %d bytes received\n", 
+                        packets_sent,
+                        recv_bytes);
+                printf("(MCPTL_sendCTRL)Timeout: No response from performer\n");
+                rv = -1;
+                resend = false;
+            }
         }
-        resend = Packet_checkError(pHandle->CTRLrxbuf)? true : false;
     }
 
-out:
     return rv;
 }
 
-/*
- * Same as SYNC, but receives multiple responses and cant do a
- * CRC check
- * TODO: SYNC/ASYNC as flag instead of another function
- */
-static int MCPTL_sendASYNC(MCPTL_handle *pHandle, uint8_t flags){
-    return 0;
-}
-
-
 
 /*
- * local function to send any type of packet without verifying 
- * that its connected
+ * Send packet of size n on tx buf of specified channel
+ * returns a negative value if an error occurred
  */
 static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
     int rv = 0;
@@ -268,7 +177,7 @@ static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
             goto out;
             break;
         default:
-            perror("Invalid channel");
+            printf("(MCPTL_sendPacket) Invalid channel\n");
             rv = -1;
             goto out;
     }
@@ -277,23 +186,19 @@ static int MCPTL_sendPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
     int payload_size = n - 6;
 
     //send Header
-    rv = UART_Send(pHandle->fd, offset, 4);
+    rv |= UART_Send(pHandle->fd, offset, 4);
     offset += 4;
 
     if(payload_size){
         //intra-packet pause (1ms)
-        struct timespec ts;
-        ts.tv_sec = 0;
-        ts.tv_nsec = 1000000L; // 1 millisecond = 1,000,000 nanoseconds
-        nanosleep(&ts, NULL);
-
+        Timer_msPause(1);
         //send payload
-        UART_Send(pHandle->fd, offset, payload_size);
+        rv |= UART_Send(pHandle->fd, offset, payload_size);
         offset += payload_size;
     }
 
     //send CRC
-    UART_Send(pHandle->fd, offset, 2);
+    rv |= UART_Send(pHandle->fd, offset, 2);
 
 out:
     return rv;
@@ -350,14 +255,7 @@ static int MCPTL_CONFIG_UpdateBeacon(BEACON_t *LocalBeacon, BEACON_t *PerformerB
     LocalBeacon->TXA_Max = MIN(LocalBeacon->TXA_Max, PerformerBeacon->TXA_Max);
 }
 
-bool MCPTL_CheckTimeout(time_t start_time, int timeout) {
-    time_t current_time = time(NULL);
-    if (difftime(current_time, start_time) >= timeout) {
-        return 1;  // Timeout occurred
-    } else {
-        return 0;  // Timeout not yet occurred
-    }
-}
+
 
 static int MCPTL_BufDump(MCPTL_handle *pHandle){
     printf("TX:\n");
@@ -369,4 +267,114 @@ static int MCPTL_BufDump(MCPTL_handle *pHandle){
         printf("%x ",pHandle->CTRLrxbuf[i]);
     }
     printf("\n");
+}
+
+
+
+
+
+
+
+
+
+/*
+ * Exchanges Beacon with performer until both agree on parameters
+ */
+int MCPTL_stateCONFIG(MCPTL_handle *pHandle, BEACON_t * LocalBeacon){
+    int rv = 0;     //timeout, error
+
+    //Create packet 
+    Packet_t packet;
+    packet.header.Beacon = *LocalBeacon;
+    packet.Payload = 0;
+    packet.CRC = 0;
+
+    //Serialize packet and move to control channel
+    uint8_t buf[256];
+    Serialize_Packet(&packet, buf, 256);
+    memcpy(pHandle->CTRLtxbuf, buf, 256);
+
+    BEACON_t PerformerBeacon;
+    long start_time = Timer_currentMillis();
+    bool repeat = true;
+    do{
+        //Send packet and receive response
+        MCPTL_sendCTRL(pHandle);
+        uint8_t *ResponseBuf = pHandle->CTRLrxbuf;
+
+        int type = Packet_getType(ResponseBuf);
+        switch(type){
+            case PKTTYPE_BEACON:
+                //Keep modifying and changing beacons until the response is the same
+                if(!memcmp(pHandle->CTRLrxbuf, ResponseBuf, sizeof(PacketHeader_t))){
+                    pHandle->state = STATE_CONNECTING;
+                    repeat = false;
+                }else{
+                    Beacon_decode(&PerformerBeacon, ResponseBuf);
+                    MCPTL_CONFIG_UpdateBeacon(LocalBeacon, &PerformerBeacon);
+                }
+                break;
+            case PKTTYPE_ERROR:
+                pHandle->state = STATE_IDLE;
+                rv = Packet_checkError(ResponseBuf);
+                repeat = false;
+                break;
+            default:
+                //Keep sending beacons
+                break;
+        }
+        if(Timer_checkTimeout(start_time, TIMEOUT)){
+            printf("Timeout: No Beacon Response from performer\n");
+            repeat = false;
+        }
+    }while(repeat);
+
+    return rv;
+}
+
+/*
+ * Sends PING and awaits for response. If there is a PING response,
+ * the devices go to connected state
+ */
+int MCPTL_stateCONNECT(MCPTL_handle *pHandle){
+    int rv = 0;     //timeout, error
+    //Create packet 
+    Packet_t packet;
+    Ping_set(&packet.header.Ping,0,0,0,0,0);
+    packet.Payload = 0;
+    packet.CRC = 0;
+
+    //Serialize packet and move to sync channel
+    uint8_t buf[256];
+    Serialize_Packet(&packet, buf, 256);
+    memcpy(pHandle->CTRLtxbuf, buf, 256);
+
+    //Send packet and check for error response
+    long start_time = Timer_currentMillis();
+    bool repeat = true;
+    do{
+        MCPTL_sendCTRL(pHandle);
+        uint8_t *ResponseBuf = pHandle->CTRLrxbuf;
+        int type = Packet_getType(ResponseBuf);
+        switch(type){
+            case PKTTYPE_PING:
+                repeat = false;
+                pHandle->state = STATE_CONNECTED;
+                break;
+            case PKTTYPE_ERROR:
+                repeat = false;
+                pHandle->state = STATE_IDLE;
+                rv = Packet_checkError(ResponseBuf);
+                break;
+            default:
+                //Keep sending
+                break;
+        }
+        if(Timer_checkTimeout(start_time, TIMEOUT)){
+            printf("Timeout: No Ping Response from performer\n");
+            repeat = false;
+        }
+    }while(repeat);
+
+    return rv;
 }

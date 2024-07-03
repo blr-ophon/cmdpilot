@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "packet.h"
 #include "uart.h"
+#include "timer.h"
 
 typedef enum{
     CHANNEL_CTRL,
@@ -50,7 +51,6 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon);
 int MCPTL_stateCONFIG(MCPTL_handle *pHandle, BEACON_t *LocalBeacon);
 int MCPTL_stateCONNECT(MCPTL_handle *pHandle);
 
-bool MCPTL_CheckTimeout(time_t start_time, int timeout);
 void test_sendBeacon(MCPTL_handle *pHandle);
 
 #endif

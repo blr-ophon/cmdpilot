@@ -6,8 +6,8 @@
 void Decode_Packet(uint8_t *PKTbuf, bool recv){
     PacketHeader_t *header = (PacketHeader_t*)PKTbuf;
     
-    char *recv_str = "Received";
-    char *sent_str = "Sent";
+    char *recv_str = "\n<< ";
+    char *sent_str = "\n>> ";
 
     switch(header->Any.type){
         case PKTTYPE_BEACON:               

@@ -10,8 +10,12 @@ int main(int argc, char *argv[]){
             "/dev/ttyACM0",
             BAUD_RATE 
     );
-    //MCP_connect(pHandle);
-    test_sendBeacon(pHandle);
+    if(!pHandle){
+        printf("Error creating Handle\n");
+        exit(EXIT_FAILURE);
+    }
+    MCP_connect(pHandle);
+    //test_sendBeacon(pHandle);
 
 
 

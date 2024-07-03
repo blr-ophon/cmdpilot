@@ -7,8 +7,13 @@
  * and user defined parameters
  */
 MCPTL_handle *MCP_createHandle(char *port, long baudRate){
+    int fd = UART_getfd(port, baudRate);
+    if(fd < 0){
+        return NULL;
+    }
+
     MCPTL_handle *pHandle = calloc(1, sizeof(MCPTL_handle));
-    pHandle->fd = UART_getfd(port, baudRate);
+    pHandle->fd = fd;
     pHandle->state = STATE_IDLE;
     pHandle->RXS_Max = RXS_MAX;
     pHandle->TXS_Max = TXS_MAX;
@@ -35,10 +40,10 @@ int MCP_keepAlive(MCPTL_handle *pHandle, bool condition){
         alive = true;
     }
 
-    time_t startTime = time(NULL);
+    long startTime = Timer_currentMillis();
     while(!alive){
         rv = MCP_connect(pHandle);
-        if(MCPTL_CheckTimeout(startTime, TIMEOUT)){
+        if(Timer_checkTimeout(startTime, TIMEOUT)){
             rv = -1;
             break;
         }
@@ -61,7 +66,11 @@ int MCP_connect(MCPTL_handle *pHandle){
                  * Send BEACON until receiving a BEACON.
                  */
                 printf("State: IDLE\n");
-                MCPTL_stateIDLE(pHandle, &LocalBeacon);
+                if(MCPTL_stateIDLE(pHandle, &LocalBeacon) < 0){
+                    printf("(MCP_connect) Unable to start configuring\n");
+                    rv = -1;
+                    goto out;
+                }
                 break;
             case STATE_CONFIGURING:
                 printf("State: CONFIGURING\n");

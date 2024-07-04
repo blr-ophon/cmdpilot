@@ -25,8 +25,8 @@ typedef enum{
 
 typedef struct{
     //Synchronous Channel
-    uint8_t SYNCrxBuf[256];     
-    uint8_t SYNCtxBuf[256];
+    uint8_t SYNCrxbuf[256];     
+    uint8_t SYNCtxbuf[256];
     //Control Channel
     uint8_t CTRLrxbuf[256];
     uint8_t CTRLtxbuf[256];

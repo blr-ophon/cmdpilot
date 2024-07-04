@@ -44,8 +44,8 @@ int MCP_connect(MCPTL_handle *pHandle){
                 printf("State: IDLE\n");
                 if(MCPTL_stateIDLE(pHandle, &LocalBeacon) < 0){
                     printf("(MCP_connect) Unable to start configuring\n");
-                    //rv = -1;
-                    //goto out;
+                    rv = -1;
+                    goto out;
                 }
                 break;
             case STATE_CONFIGURING:

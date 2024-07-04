@@ -1,28 +1,116 @@
 #include "cmdpilot.h"
-#include "mcp.h"
 
 void CMDPilot(int argc, char *argv[]);
+void cmdpilot_main(void);
 
 int main(int argc, char *argv[]){
-    //Parse arguments
-    //Execute
-    MCPTL_handle *pHandle = MCP_createHandle(
+    //CMDPilot(argc, argv);
+    cmdpilot_main();
+    return 0;
+
+
+
+}
+
+
+void cmdpilot_main(void){
+
+    cmdpilot_help();
+    char buf[64] = {0}; 
+    MCPTL_handle *pHandle = NULL;
+
+    while(1){
+        char state_str[12] = "IDLE";
+        if(pHandle){
+            switch(pHandle->state){
+                case STATE_IDLE:
+                    strncpy(state_str, "IDLE", 12);
+                    break;
+                case STATE_CONNECTED:
+                    strncpy(state_str, "CONNECTED", 12);
+                    break;
+            }
+        }
+        printf("[%s]>> ", state_str);
+        fgets(buf, 31, stdin);
+        buf[strcspn(buf, "\n")] = 0;
+        
+        //TODO
+        //Tokenize buf and deal only with first token
+        //parse other tokens into arguments
+
+        if(strcmp(buf, "exit") == 0){
+            break;
+        }
+        else if(strcmp(buf, "help") == 0){
+            cmdpilot_help();
+        }
+        else if(strcmp(buf, "connect") == 0){
+            cmdpilot_connect(pHandle);
+        }
+        else if(strcmp(buf, "command") == 0){
+            printf("command\n");
+        }
+        else if(strcmp(buf, "register") == 0){
+        }
+        else if(strcmp(buf, "datalog") == 0){
+        }
+        else if(strcmp(buf, "reglist") == 0){
+        }
+
+        //fputs(buf, stdout);
+    }
+
+    MCP_freeHandle(pHandle);
+}
+
+
+void cmdpilot_help(void){
+    printf("OPTIONS:\n"
+            "   \nconnect: Connect to performer\n"
+            "   \ncommand <mcp_command>\n"
+            "       mcp_command: getmcpversion, startmotor, stopmotor, stopramp, startstop, faultack\n"
+            "   \nregister <set/get> <register(s)>\n"
+            "       register set (reg1_id=val1,reg2_id=val2,...)\n"
+            "       register get <reg_id>\n"
+            "   \nreglist: Display register list\n"
+            "   \nexit: Exit application\n"
+    );
+}
+
+int cmdpilot_connect(MCPTL_handle *pHandle){
+    int rv = 0;
+
+    pHandle = MCP_createHandle(
             "/dev/ttyACM0",
             BAUD_RATE 
     );
     if(!pHandle){
         printf("Error creating Handle\n");
-        exit(EXIT_FAILURE);
+        rv = -1;
+        goto out;
     }
-    MCP_connect(pHandle);
-    //test_sendBeacon(pHandle);
+    if(MCP_connect(pHandle) < 0){
+        rv = -1;
+        goto out;
+    }
 
-
-
-    MCP_freeHandle(pHandle);
-    //CMDPilot(argc, argv);
-    return 0;
+out:
+    return rv;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void handle_set(char *arg) {
     printf("%s\n", arg);
@@ -47,16 +135,20 @@ void CMDPilot(int argc, char *argv[]){
     while ((opt = getopt(argc, argv, "R:")) != -1) {
         switch (opt) {
             case 'C': 
+                //Call services.c functions to execute Command services 
                 printf("Command\n");
                 break;
             case 'R':
+                //Call services.c to execute Registry services 
                 printf("Registry\n");
                 //handle_set(optarg);
                 break;
             case 'h':
+                //Call ui.c functions to display Help 
                 printf("Help\n");
                 break;
             case 'r':
+                //Call ui.c functions to display reference lists
                 printf("register list\n");
                 break;
             default:
@@ -64,13 +156,7 @@ void CMDPilot(int argc, char *argv[]){
         }
     }
 
-    //Call Services to execute services 
-    
-    //Call UI to display Help and reference lists
-    
-    //Call config to congigure port, baud rate etc
-    
-    //Call monitor for serial monitoring
+    //Shell mode
     while(0){
         //process input
             //read from shell buffer

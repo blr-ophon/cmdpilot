@@ -16,7 +16,7 @@ static int MCPTL_recvTLPacket(MCPTL_handle *pHandle, uint8_t channel, int *n);
 static int MCPTL_sendCTRL(MCPTL_handle *pHandle);
 static int MCPTL_sendASYNC(MCPTL_handle *pHandle, uint8_t flags);
 static int MCPTL_CONFIG_UpdateBeacon(BEACON_t *LocalBeacon, BEACON_t *PerformerBeacon);
-static int MCPTL_BufDump(MCPTL_handle *pHandle);
+static void MCPTL_BufDump(MCPTL_handle *pHandle, int channel);
 
 void test_sendBeacon(MCPTL_handle *pHandle){
     BEACON_t LocalBeacon;
@@ -34,7 +34,7 @@ void test_sendBeacon(MCPTL_handle *pHandle){
     uint8_t buf[BEACON_SIZE] = {0};
     Serialize_Packet(&packet, buf, BEACON_SIZE);
     memcpy(pHandle->CTRLtxbuf, buf, BEACON_SIZE);
-    MCPTL_BufDump(pHandle);
+    MCPTL_BufDump(pHandle, CHANNEL_CTRL);
 
     //Send packet and check for error response
     Decode_Packet(pHandle->CTRLtxbuf, 0);
@@ -81,7 +81,7 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
     while(resend){
         //send packet
         Decode_Packet(pHandle->CTRLtxbuf, 0);
-        MCPTL_BufDump(pHandle);
+        MCPTL_BufDump(pHandle, CHANNEL_CTRL);
         MCPTL_sendCTRL(pHandle);
 
         //Check for bad responses 
@@ -106,7 +106,7 @@ int MCPTL_stateIDLE(MCPTL_handle *pHandle, const BEACON_t *const LocalBeacon){
     }
 
 
-    MCPTL_BufDump(pHandle);
+    MCPTL_BufDump(pHandle, CHANNEL_CTRL);
     printf("\n");
     return rv;
 }
@@ -171,7 +171,7 @@ static int MCPTL_sendTLPacket(MCPTL_handle *pHandle, uint8_t channel, int n){
             txBuf = pHandle->CTRLtxbuf;
             break;
         case CHANNEL_SYNC:
-            txBuf = pHandle->SYNCtxBuf;
+            txBuf = pHandle->SYNCtxbuf;
             break;
         case CHANNEL_ASYNC:
             //TODO
@@ -215,7 +215,7 @@ static int MCPTL_recvTLPacket(MCPTL_handle *pHandle, uint8_t channel, int *n){
             rxBuf = pHandle->CTRLrxbuf;
             break;
         case CHANNEL_SYNC:
-            rxBuf = pHandle->SYNCrxBuf;
+            rxBuf = pHandle->SYNCrxbuf;
             break;
         case CHANNEL_ASYNC:
             //TODO
@@ -258,15 +258,34 @@ static int MCPTL_CONFIG_UpdateBeacon(BEACON_t *LocalBeacon, BEACON_t *PerformerB
 
 
 
-static int MCPTL_BufDump(MCPTL_handle *pHandle){
-    printf("CHANNEL BUFFER:\n");
+static void MCPTL_BufDump(MCPTL_handle *pHandle, int channel){
+    uint8_t *txBuf = NULL;
+    uint8_t *rxBuf = NULL;
+    switch(channel){
+        case CHANNEL_CTRL:
+            printf("CONTROL CHANNEL:\n");
+            txBuf = pHandle->CTRLtxbuf;
+            rxBuf = pHandle->CTRLrxbuf;
+            break;
+        case CHANNEL_SYNC:
+            printf("SYNC CHANNEL:\n");
+            txBuf = pHandle->SYNCtxbuf;
+            rxBuf = pHandle->SYNCrxbuf;
+            break;
+        case CHANNEL_ASYNC:
+            printf("ASYNC CHANNEL:\n");
+            break;
+        default:
+            break;
+    }
+
     printf("TX:\n");
     for(int i = 0; i < pHandle->TXS_Max; i++){
-        printf("%x ",pHandle->CTRLtxbuf[i]);
+        printf("%x ",txBuf[i]);
     }
     printf("\nRX:\n");
     for(int i = 0; i < pHandle->RXS_Max; i++){
-        printf("%x ",pHandle->CTRLrxbuf[i]);
+        printf("%x ",rxBuf[i]);
     }
     printf("\n\n");
 }

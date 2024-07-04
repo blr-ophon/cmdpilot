@@ -34,7 +34,7 @@ typedef struct{
     uint8_t TXS_Max:7;
     uint8_t TXA_Max:7;
     uint8_t CRCH:4;
-}BEACON_t;
+}__attribute__((packed))BEACON_t;
 
 typedef struct{
     uint8_t type:4;

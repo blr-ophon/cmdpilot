@@ -1,5 +1,7 @@
 #include "ui.h"
 
+#define REG_NUMBER 11
+
 char *names[] = {
     "GLOBAL_CONFIG",            
     "MOTOR_CONFIG",             
@@ -31,12 +33,17 @@ char *Id_Tokens[] = {
 /*
  * Show the list of available registers and their IDS
  */
-void UI_displayRegisterList(void){
-
-
+void UI_displayRegList(void){
+    for(int i = 0; i < REG_NUMBER; i++){
+        printf("%s: %s\n", names[i], Id_Tokens[i]);
+    }
+    printf("\n");
 }
 
-void UI_registerHandler(int reg, uint8_t *regStruct){
+/*
+ * Displays additional info for every register struct
+ */
+void UI_registerInfo(int reg, uint8_t *regStruct){
     switch(reg){
         case REG_GLOBAL_CONFIG:
             break;
@@ -61,5 +68,19 @@ void UI_registerHandler(int reg, uint8_t *regStruct){
         case REG_SHIFT_STLINK:
             break;
     }
+}
+
+void UI_displayHelp(void){
+    printf("OPTIONS:\n"
+            "   \nconnect: Connect to performer\n"
+            "   \ncommand <mcp_command>\n"
+            "       mcp_command: getmcpversion, startmotor, stopmotor, stopramp, startstop, faultack\n"
+            "   \nregister <set/get> <register(s)>\n"
+            "       register set (reg1_id=val1,reg2_id=val2,...)\n"
+            "       register get <reg_id>\n"
+            "   \nreglist: Display register list\n"
+            "   \nhelp: Display help\n"
+            "   \nexit: Exit application\n\n"
+    );
 }
 

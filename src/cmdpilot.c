@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
 
 void cmdpilot_main(void){
 
-    cmdpilot_help();
+    UI_displayHelp();
     char buf[64] = {0}; 
     MCPTL_handle *pHandle = NULL;
 
@@ -43,7 +43,7 @@ void cmdpilot_main(void){
             break;
         }
         else if(strcmp(buf, "help") == 0){
-            cmdpilot_help();
+            UI_displayHelp();
         }
         else if(strcmp(buf, "connect") == 0){
             cmdpilot_connect(pHandle);
@@ -56,6 +56,10 @@ void cmdpilot_main(void){
         else if(strcmp(buf, "datalog") == 0){
         }
         else if(strcmp(buf, "reglist") == 0){
+            UI_displayRegList();
+        }
+        else{
+            printf("Invalid option\n");
         }
 
         //fputs(buf, stdout);
@@ -65,18 +69,6 @@ void cmdpilot_main(void){
 }
 
 
-void cmdpilot_help(void){
-    printf("OPTIONS:\n"
-            "   \nconnect: Connect to performer\n"
-            "   \ncommand <mcp_command>\n"
-            "       mcp_command: getmcpversion, startmotor, stopmotor, stopramp, startstop, faultack\n"
-            "   \nregister <set/get> <register(s)>\n"
-            "       register set (reg1_id=val1,reg2_id=val2,...)\n"
-            "       register get <reg_id>\n"
-            "   \nreglist: Display register list\n"
-            "   \nexit: Exit application\n"
-    );
-}
 
 int cmdpilot_connect(MCPTL_handle *pHandle){
     int rv = 0;

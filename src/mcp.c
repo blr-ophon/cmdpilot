@@ -110,11 +110,11 @@ out:
  */
 void MCP_recvResponse(MCPTL_handle *pHandle, Response_t *response){
     //Receive Response
-    int recv_bytes = UART_Recv(pHandle->fd, pHandle->SYNCrxBuf, 256);
-    response->status_code = pHandle->SYNCrxBuf[recv_bytes-1];
+    int recv_bytes = UART_Recv(pHandle->fd, pHandle->SYNCrxbuf, 256);
+    response->status_code = pHandle->SYNCrxbuf[recv_bytes-1];
     if(response->status_code == RP_CMD_OK){
         //read payload    
-        memcpy(response->payload, pHandle->SYNCrxBuf, recv_bytes-1);
+        memcpy(response->payload, pHandle->SYNCrxbuf, recv_bytes-1);
     }
     //TODO: encapsulate into response packet
 }

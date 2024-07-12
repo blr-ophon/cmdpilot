@@ -4,9 +4,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-void displayRegisterList(void);
-void displayHelp(void);
-
 typedef enum{
     REG_GLOBAL_CONFIG,            
     REG_MOTOR_CONFIG,             
@@ -21,5 +18,7 @@ typedef enum{
     REG_SHIFT_STLINK
 }Registers;
 
+void UI_displayRegList(void);
+void UI_displayHelp(void);
 
 #endif

@@ -2,6 +2,7 @@
 #define CMDPILOT_H
 
 #include "services.h"
+#include "ui.h"
 
 
 typedef enum{
@@ -20,7 +21,6 @@ typedef struct{
     //int flags;
 }parsedServices_t;
 
-void cmdpilot_help(void);
 int cmdpilot_connect(MCPTL_handle *pHandle);
 
 #endif
